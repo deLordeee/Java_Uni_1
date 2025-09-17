@@ -111,7 +111,7 @@
 
 ```bash
 
-javac MatrixProcessor.java
+javac Lab1.java
 
 ```
 
@@ -121,7 +121,7 @@ javac MatrixProcessor.java
 
 ```bash
 
-java MatrixProcessor
+java Lab1
 
 ```
 
@@ -202,5 +202,6 @@ Row 3: 2496796020642105000000000000000000000000000000000000000000000000000000000
 Студент групи IM-34 Буткевич Євгеній
 
 Залікова книжка: 63
+
 
 
