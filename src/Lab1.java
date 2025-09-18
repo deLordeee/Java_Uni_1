@@ -1,20 +1,34 @@
+/**
+ * Клас для виконання операцій з матрицями згідно з варіантом завдання
+ * Номер в списпку групи: 2
+ * C5 = 2 (додавання матриць)
+ * C7 = 2 (тип short)
+ * C11 = 2 (сума найбільших елементів кожного стовпця)
+ *
 
+ * @version 1.0
+ */
 public class Lab1 {
 
-
+    /**
+     * Головний виконавчий метод програми
+     * Виконує додавання матриць та обчислення суми найбільших елементів кожного стовпця
+     *
+     * @param args аргументи командного рядка (не використовуються)
+     */
     public static void main(String[] args) {
         try {
-            // Init some test matrix
-            double[][] matrixA = {
-                    {1.5, 2.7, 3.2},
-                    {4.1, 5.8, 6.3},
-                    {7.9, 8.4, 9.6}
+            // Ініціалізація матриць A та B типу short
+            short[][] matrixA = {
+                    {1, 2, 3},
+                    {4, 5, 6},
+                    {7, 8, 9}
             };
 
-            double[][] matrixB = {
-                    {9.1, 8.3, 7.5},
-                    {6.7, 5.2, 4.8},
-                    {3.4, 2.9, 1.6}
+            short[][] matrixB = {
+                    {9, 8, 7},
+                    {6, 5, 4},
+                    {3, 2, 1}
             };
 
             System.out.println("Matrix A:");
@@ -22,22 +36,17 @@ public class Lab1 {
             System.out.println("\nMatrix B:");
             printMatrix(matrixB);
 
-
-            double[][] matrixC = Xor(matrixA, matrixB);
-
-            System.out.println("\nMatrix C = A⊕B:");
+            // Виконання операції C = A + B (додавання матриць)
+            short[][] matrixC = matrixAddition(matrixA, matrixB);
+            System.out.println("\nMatrix C = A + B:");
             printMatrix(matrixC);
 
-
-            double[] rowAverages = calculateRowAverage(matrixC);
-
-            System.out.println("\nThe average value of  row of matrix C:");
-            for (int i = 0; i < rowAverages.length; i++) {
-                System.out.printf("Row %d: %.2f%n", i + 1, rowAverages[i]);
-            }
+            // Обчислення суми найбільших елементів кожного стовпця матриці C
+            int sumMaxCols = sumOfMaxInColumns(matrixC);
+            System.out.println("\nSum of maximum elements in each column of matrix C: " + sumMaxCols);
 
         } catch (IllegalArgumentException e) {
-            System.err.println("IllegalArgumentException : " + e.getMessage());
+            System.err.println("IllegalArgumentException: " + e.getMessage());
         } catch (ArithmeticException e) {
             System.err.println("ArithmeticException: " + e.getMessage());
         } catch (Exception e) {
@@ -46,96 +55,149 @@ public class Lab1 {
         }
     }
 
-
-    private static double[][] Xor(double[][] matrixA, double[][] matrixB) {
+    /**
+     * Виконує поелементне додавання двох матриць типу short
+     *
+     * @param matrixA перша матриця для додавання
+     * @param matrixB друга матриця для додавання
+     * @return результуюча матриця після додавання
+     * @throws IllegalArgumentException якщо матриці мають неправильний формат або розміри
+     * @throws ArithmeticException якщо відбувається переповнення при додаванні
+     */
+    private static short[][] matrixAddition(short[][] matrixA, short[][] matrixB) {
         checkForExceptions(matrixA, matrixB);
 
         int rows = matrixA.length;
         int cols = matrixA[0].length;
-        double[][] result = new double[rows][cols];
+        short[][] result = new short[rows][cols];
 
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-
-                long bitsA = Double.doubleToLongBits(matrixA[i][j]);
-                long bitsB = Double.doubleToLongBits(matrixB[i][j]);
-
-
-                long xorResult = bitsA ^ bitsB;
-
-
-                result[i][j] = Double.longBitsToDouble(xorResult);
+                // Перевірка на переповнення при додаванні
+                int sum = (int) matrixA[i][j] + (int) matrixB[i][j];
+                if (sum > Short.MAX_VALUE || sum < Short.MIN_VALUE) {
+                    throw new ArithmeticException(
+                            String.format("Overflow at position [%d][%d]: %d + %d = %d (exceeds short range)",
+                                    i, j, matrixA[i][j], matrixB[i][j], sum));
+                }
+                result[i][j] = (short) sum;
             }
         }
 
         return result;
     }
 
-
-    private static double[] calculateRowAverage(double[][] matrix) {
+    /**
+     * Обчислює суму найбільших елементів кожного стовпця матриці
+     *
+     * @param matrix вхідна матриця типу short
+     * @return сума найбільших елементів всіх стовпців
+     * @throws IllegalArgumentException якщо матриця є null, порожньою або має неправильний формат
+     * @throws ArithmeticException якщо відбувається переповнення при підсумовуванні
+     */
+    private static int sumOfMaxInColumns(short[][] matrix) {
         if (matrix == null || matrix.length == 0) {
-            throw new IllegalArgumentException("Matrix can not be null or empty");
+            throw new IllegalArgumentException("Matrix cannot be null or empty");
+        }
+
+        // Додаткова перевірка на коректність структури матриці
+        for (int i = 0; i < matrix.length; i++) {
+            if (matrix[i] == null) {
+                throw new IllegalArgumentException("Row " + i + " cannot be null");
+            }
+            if (i > 0 && matrix[i].length != matrix[0].length) {
+                throw new IllegalArgumentException("All rows must have the same length");
+            }
         }
 
         int rows = matrix.length;
-        double[] averages = new double[rows];
+        int cols = matrix[0].length;
+        long sum = 0; // Використовуємо long для запобігання переповненню
 
-        for (int i = 0; i < rows; i++) {
-            if (matrix[i] == null || matrix[i].length == 0) {
-                throw new IllegalArgumentException("Row " + i + " can not be null or empty");
-            }
+        for (int j = 0; j < cols; j++) {
+            short maxVal = matrix[0][j];
 
-            double sum = 0.0;
-            int cols = matrix[i].length;
-
-            for (int j = 0; j < cols; j++) {
-                if (Double.isNaN(matrix[i][j]) || Double.isInfinite(matrix[i][j])) {
-                    throw new ArithmeticException("Error value into [" + i + "][" + j + "]");
+            // Знаходимо максимальний елемент у стовпці j
+            for (int i = 1; i < rows; i++) {
+                if (matrix[i][j] > maxVal) {
+                    maxVal = matrix[i][j];
                 }
-                sum += matrix[i][j];
             }
 
-            averages[i] = sum / cols;
+            // Додаємо до суми з перевіркою переповнення
+            sum += maxVal;
+            if (sum > Integer.MAX_VALUE || sum < Integer.MIN_VALUE) {
+                throw new ArithmeticException(
+                        String.format("Overflow when calculating sum of maximum elements: sum = %d", sum));
+            }
         }
 
-        return averages;
+        return (int) sum;
     }
 
-
-    private static void checkForExceptions(double[][] matrixA, double[][] matrixB) {
+    /**
+     * Перевіряє матриці на коректність для виконання операції додавання
+     *
+     * @param matrixA перша матриця для перевірки
+     * @param matrixB друга матриця для перевірки
+     * @throws IllegalArgumentException якщо матриці не відповідають вимогам для додавання
+     */
+    private static void checkForExceptions(short[][] matrixA, short[][] matrixB) {
+        // Перевірка на null
         if (matrixA == null || matrixB == null) {
-            throw new IllegalArgumentException("Matrix can not be null");
+            throw new IllegalArgumentException("Matrices cannot be null");
         }
 
+        // Перевірка на порожність
         if (matrixA.length == 0 || matrixB.length == 0) {
-            throw new IllegalArgumentException("Matrix can not be empty");
+            throw new IllegalArgumentException("Matrices cannot be empty");
         }
 
+        // Перевірка на однакову кількість рядків
         if (matrixA.length != matrixB.length) {
-            throw new IllegalArgumentException("Matrix must have the same amount of rows");
+            throw new IllegalArgumentException(
+                    String.format("Matrices must have the same number of rows: %d vs %d",
+                            matrixA.length, matrixB.length));
         }
 
+        // Перевірка кожного рядка
         for (int i = 0; i < matrixA.length; i++) {
             if (matrixA[i] == null || matrixB[i] == null) {
-                throw new IllegalArgumentException("Rows can not be  null");
+                throw new IllegalArgumentException("Row " + i + " cannot be null in either matrix");
             }
 
             if (matrixA[i].length != matrixB[i].length) {
-                throw new IllegalArgumentException("Matrix row must be the same length");
+                throw new IllegalArgumentException(
+                        String.format("Row %d must have the same length in both matrices: %d vs %d",
+                                i, matrixA[i].length, matrixB[i].length));
+            }
+
+            // Перевірка на порожні рядки
+            if (matrixA[i].length == 0) {
+                throw new IllegalArgumentException("Row " + i + " cannot be empty");
             }
         }
     }
 
-
-    private static void printMatrix(double[][] matrix) {
+    /**
+     * Виводить матриці на екран у форматованому вигляді
+     *
+     * @param matrix матриця типу short для виводу
+     * @throws IllegalArgumentException якщо матриця є null
+     */
+    private static void printMatrix(short[][] matrix) {
         if (matrix == null) {
-            System.out.println("Matrix is null");
-            return;
+            throw new IllegalArgumentException("Matrix for printing cannot be null");
         }
 
-        for (int i = 0; i < matrix.length; i++) {
-            for (int j = 0; j < matrix[i].length; j++) {
-                System.out.printf("%18.2f ", matrix[i][j]);
+        for (short[] row : matrix) {
+            if (row == null) {
+                System.out.println("[null row]");
+                continue;
+            }
+
+            for (short val : row) {
+                System.out.printf("%6d ", val);
             }
             System.out.println();
         }
